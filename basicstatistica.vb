@@ -1,3 +1,9 @@
+Imports System.Windows.Forms
+
+Public Class basicstatistica
+    Public Sub New()
+        Main()
+    End Sub
  Public Function pStatBas(ByRef oDGV As DataGridView) As String
         Dim lCol As Long, lRow As Long
         Dim lC As Integer
@@ -86,3 +92,78 @@
         End Try
 
     End Function
+Public Function PearsonCorrel(ByRef oDGV As DataGridView, ByVal iColumn1 As Integer, ByVal iColumn2 As Integer) As String
+        Dim sRTF As String = ""
+        Dim dPearson As Double
+        Dim lCol As Long, lRow As Long
+        Dim Exy As Double, Ex As Double, Ey As Double, Ex2 As Double, Ey2 As Double
+        Dim nSp1 As Integer, nSp2 As Integer, nSpCom As Integer
+        Dim TCorrel As Double, GL As Double, lAlpha As Double = 5
+        Try
+            lCol = oDGV.ColumnCount
+            lRow = oDGV.RowCount
+
+            If Auditoria(oDGV) = False Then
+                If MsgAuditoria() = False Then
+                    Return sRetAuditoria
+                    Exit Function
+                End If
+            End If
+            For iR = 0 To lRow - 1
+                If oDGV.Rows(iR).Cells(iColumn1).Value > 0 Then
+                    nSp1 += oDGV.Rows(iR).Cells(iColumn1).Value
+                   
+                End If
+                If oDGV.Rows(iR).Cells(iColumn2).Value > 0 Then
+                    nSp2 += oDGV.Rows(iR).Cells(iColumn2).Value
+                    
+                End If
+              
+                'End If
+                Ex += oDGV.Rows(iR).Cells(iColumn1).Value
+                Ex2 += (oDGV.Rows(iR).Cells(iColumn1).Value) ^ 2
+                Ey += oDGV.Rows(iR).Cells(iColumn2).Value
+                Ey2 += (oDGV.Rows(iR).Cells(iColumn2).Value) ^ 2
+                Exy += (oDGV.Rows(iR).Cells(iColumn1).Value * oDGV.Rows(iR).Cells(iColumn2).Value)
+            Next
+            nSpCom = nSp1 + nSp2
+            GL = lRow - 2
+            dPearson = (nSpCom * (Exy) - (Ex * Ey)) / (((nSpCom * (Ex2) - (Ex) ^ 2) ^ (1 / 2)) * (nSpCom * (Ey2) - (Ey) ^ 2) ^ (1 / 2))
+            TCorrel = Math.Abs(dPearson * (Math.Sqrt(GL / (1 - dPearson ^ 2))))
+            sRTF &= "<ul class='list-group'>"
+            sRTF &= "<li class='list-group-item'>Número de indivíduos da amostra " & oDGV.Columns(iColumn1).HeaderCell.Value & ": " & nSp1 & "</li>"
+            sRTF &= "<li class='list-group-item'>Número de indivíduos da amostra " & oDGV.Columns(iColumn2).HeaderCell.Value & ": " & nSp2 & "</li>"
+            sRTF &= "<li class='list-group-item'>Número total de indivíduos: " & nSpCom & "</li>"
+            sRTF &= "<li class='list-group-item'>Correlação de Pearson: " & Math.Round(dPearson, 4) & "</li>"
+            If dPearson < 0 Then
+                sRTF &= "<li class='list-group-item list-group-success'>Correlação negativa</li>"
+            ElseIf dPearson = 0 Then
+                sRTF &= "<li class='list-group-item list-group-item-warning'>Correlação neutra</li>"
+            ElseIf dPearson > 1 Then
+                sRTF &= "<li class='list-group-item list-group-success'>Correlação positiva</li>"
+            End If
+            sRTF &= "<li class='list-group-item'>Grau de liberdade (n-2): " & GL & "</li>"
+            sRTF &= "<li class='list-group-item'>Teste t-<em>student</em> para r: " & Math.Round(TCorrel, 4) & "</li>"
+            Dim tTabV As Double = TTab(lAlpha, Math.Round(GL, 0))
+            sRTF &= "<li class='list-group-item'>Valor T Tabelado t(&alpha;=0,05)(2, " & Math.Round(GL, 0) & "): " & tTabV & "</li>"
+
+            If Math.Round(TCorrel, 4) >= tTabV Then
+                sRTF &= "<li class='list-group-item list-group-item-success'><strong>HÁ</strong> correlação significativa entre os pares de dados, segundo o teste  t-<em>student</em> para r a 5% de probabilidade</li>"
+            Else
+                sRTF &= "<li class='list-group-item list-group-item-success'><strong>NÃO HÁ</strong> correlação significativa entre os pares de dados, segundo o teste  t-<em>student</em> para r a 5% de probabilidade</li>"
+            End If
+            sRTF &= "</ul>"
+
+
+            sResult = sHTMLStart & "<h3 class='alert alert-success'>Correlação de Pearson</h3>" & sRTF & sFooter & sHTMLEnd
+            Return sResult
+        Catch excpt As Exception
+            MessageBox.Show("Erro: " & excpt.Message & vbNewLine & vbNewLine & "Local de Origem: " & excpt.StackTrace, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Stop)
+            Return retError(sHTMLStart, excpt, sHTMLEnd)
+        End Try
+    End Function
+  
+  Protected Overrides Sub Finalize()
+        MyBase.Finalize()
+  End Sub
+End Class
