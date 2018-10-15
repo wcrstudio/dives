@@ -1,6 +1,7 @@
 Imports System.Windows.Forms
 Public Class diversity
     Public LibCalculate As New decalculate.calculate
+    Private sNotaDiversidade As String = "<p><small>O índice Total de Diversidade apesar de ser calculado, na prática não representa um parâmetro comparável, pois está isolado. Entretanto pode ser útil se for usado para comparação de séries temporais distintas!</small></p>"
     Public Sub New()
         Main()
     End Sub
@@ -13,7 +14,7 @@ Public Class diversity
         Dim lFi As Double, lLogFi As Double
         Dim sLev As String, somaT As Double
         Dim sRTF As String = ""
-
+        Dim lDivSWTotal As Double
 
         lcol = oDGV.ColumnCount
         lrow = oDGV.RowCount
@@ -74,9 +75,11 @@ Public Class diversity
                 sRTF &= "</tbody><tfooter><tr class='text-right text-info'>"
                 sRTF &= "<td colspan=5>Índice Diversidade de Shannon-Wiener: " & Format(Math.Abs(somaT), "###,###,###,##0.0###") & "</td></tr></tfooter>"
                 sRTF &= "</table></div><hr/>"
+                lDivSWTotal += somaT
                 somaT = 0
             Next iC
-
+            sRTF &= "<p class='lead text-success'>Índice Diversidade de Shannon-Wiener Total: " & Format(Math.Abs(lDivSWTotal), "###,###,###,##0.0###") & "*</p>"
+            sRTF &= sNotaDiversidade
             sResult = sHTMLStart & "<h3 class='alert alert-success'>Relatório da Diversidade de Shannon-Wiener</h3>" & sRTF & sFooter & sHTMLEnd
             Return sResult
 
@@ -200,8 +203,8 @@ Public Class diversity
                 somaT = 0
                 lFi = 0
             Next iC
-            'sRTF &= "Índice Diversidade de Simpson Total: " & Format(Math.Abs(lDivSimTotal), "###,###,###,##0.0###") & vbNewLin
-
+            sRTF &= "<p class='lead text-success'>Índice Diversidade de Simpson Total: " & Format(Math.Abs(lDivSimTotal), "###,###,###,##0.0###") & "</p>"
+            sRTF &= sNotaDiversidade
             sResult = sHTMLStart & "<h3 class='alert alert-success'>Relatório da Diversidade de Simpson</h3>" & sRTF & sFooter & sHTMLEnd
             Return sResult
 
